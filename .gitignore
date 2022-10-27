@@ -41,3 +41,5 @@ shiny/Area.R
 2Dmitoplots/2Dmitoplots
 2Dmitoplots/BootstrapParticles
 2Dmitoplots/FibreClasses
+*.txt
+*.png

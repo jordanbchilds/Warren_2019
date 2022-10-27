@@ -1,6 +1,6 @@
 library(data.table)
 
-getData = function(fname,cord,mitochan="VDAC1"){
+getData = function(fname, cord, mitochan="VDAC1"){
   dat = fread(fname,sep="\t",stringsAsFactors=FALSE,header=TRUE)
   dat$channel = gsub("GRIM19","NDUFA13",dat$channel)
 
