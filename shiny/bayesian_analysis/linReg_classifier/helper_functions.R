@@ -102,6 +102,37 @@ getData_mats = function(chan, mitochan="VDAC1",
   list(ctrl=ctrl_mat, pts=pat_mat)
 }
 
+getData_Npts = function(chan, mitochan="VDAC1"){
+  dat = getData("../../dat.txt", chan)
+  
+  sbj = unique(dat$patient_id)
+  pts = sort(sbj[grepl("P", sbj)])
+  Npts = double(length(pts))
+  names(Npts) = pts
+  for(pat in pts){
+    Npts[pat] = nrow(dat[dat$channel==paste("LOG", mitochan, sep="_") & dat$patient_id == pat, ])
+  }
+  Nptts
+}
+
+index_creator = function(Npops, ind){
+  index = rep(FALSE, sum(Npops))
+  if( is.character(ind) ){
+    ind = which(names(Npops)==pat)
+    names(Npops) = NULL
+  } else if( is.null(names(Npops)) & is.character(ind)){
+    stop("if ind is a character Npops must be a named vector")
+  }
+  if(ind>1 & ind<length(Npops)){
+    return((sum(Npops[1:(ind-1)])+1):sum(Npops[1:ind]))
+  } else if(ind==1){
+    return(1:Npops[1])
+  } else {
+    return( (sum(Npops[1:(ind-1)])+1):sum(Npops) ) 
+  }
+}
+
+
 ##
 ## COLOURS
 ##
@@ -205,7 +236,6 @@ output_reader = function(folder, chan, pat, out_type){
 ## PLOTTERS
 ##
 
-  
 classif_plot = function(ctrl_data, pat_data, classifs_pat, chan, mitochan, pat){
     
     xrange = range(c(ctrl_data[,1], pat_data[,1]))

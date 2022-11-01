@@ -18,8 +18,9 @@ pts = sort( ptsAll[grepl("P", ptsAll)] )
 # inferenecce 
 inference = function(input){
   with(c(input),{
-    data_mats = getData_mats(chan=chan, 
-                             data_transform=myData_transform, get_patindex=TRUE)
+    data_mats = getData_mats(chan=chan, data_transform=myData_transform, 
+                             get_patindex=TRUE)
+    
     Yctrl = data_mats$ctrl
     Ypat = data_mats$pts
     Nctrl = nrow(Yctrl)
@@ -29,7 +30,7 @@ inference = function(input){
     data_list = list(Yctr=Yctrl, Ypat=Ypat, Nctrl=Nctrl, Npat=Npat, 
                 pat_index=pat_index, n_pts=n_pts)
     
-    output = stan("./allData_GMM_hier.stan", data=c(prior_list, data_list), chains=1, 
+    output = stan("allData_GMM_hier.stan", data=c(prior_list, data_list), chains=1, 
                   iter=(MCMCOut+MCMCBurnin)*MCMCThin, warmup=MCMCBurnin, thin=MCMCThin )
     
     outmat = as.matrix(output)
@@ -38,8 +39,7 @@ inference = function(input){
     classifs_df = outmat[, grepl("classif", outcols)]
     classifs_avg = colMeans(classifs_df)
     post = outmat[, !(grepl("classif", outcols)|grepl("lp__", outcols)|
-                        grepl("probvec", outcols)|grepl("dens", outcols)|
-                        grepl("z", outcols))]
+                        grepl("probDef_vec", outcols)|grepl("dens", outcols))]
     
     return( list(post=post, classifs=classifs_avg) )
   })
@@ -74,11 +74,11 @@ prior_list = list(mean_mu1=mean_mu1, var_mu1=var_mu1,
 inputs = list()
 {
   input0 = list()
-  input0$MCMCOut = 2000
-  input0$MCMCBurnin = 2000
+  input0$MCMCOut = 50 # 2000
+  input0$MCMCBurnin = 10 # 2000
   input0$MCMCThin = 1
   input0$n.chains = 1
-  for(chan in cord){
+  for(chan in cord[1:2]){
     outroot = chan
     inputs[[outroot]] = input0
     inputs[[outroot]]$chan = chan
@@ -100,9 +100,8 @@ stopCluster(cl)
 # save output
 for(outroot in names(gmm_output)){
   output = gmm_output[[outroot]]
-  
-  write.table(output$post, file.path("./Output", folder, paste0(outroot,"_POST.txt")), row.names=FALSE, col.names=TRUE)
-  write.table(output$classif, file.path("./Output", folder, paste0(outroot,"_CLASS.txt")), row.names=FALSE, col.names=TRUE)
+  write.table(output$post, file.path("Output", folder, paste0(outroot,"_POST.txt")), row.names=FALSE, col.names=TRUE)
+  write.table(output$classif, file.path("Output", folder, paste0(outroot,"_CLASS.txt")), row.names=FALSE, col.names=TRUE)
 }
 
 ### prior beliefs

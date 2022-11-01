@@ -6,6 +6,7 @@ library(MASS)
 ##
 
 getData = function(fname, cord, mitochan="VDAC1"){
+  
   dat = fread(fname, sep="\t", stringsAsFactors=FALSE, header=TRUE)
   
   dat$channel = gsub("GRIM19","NDUFA13",dat$channel)
@@ -72,7 +73,7 @@ getData_mats = function(chan, mitochan="VDAC1",
   Xctrl = dat[dat$channel==paste0("LOG", "_", mitochan) & dat$patient_type=="control", "value"]
   Yctrl = dat[dat$channel==paste0("LOG", "_", chan) & dat$patient_type=="control", "value"]
   
-  ctrl_mat = as.matrix( cbind( Xctrl, Yctrl ) )
+  ctrl_mat = log( as.matrix( cbind( Xctrl, Yctrl ) ) )
   
   if(!ctrl_only){
     pat_index = vector("numeric")
@@ -84,7 +85,7 @@ getData_mats = function(chan, mitochan="VDAC1",
       for(pat in pts){
         Xpat = dat[dat$channel==paste("LOG", mitochan, sep="_") & dat$patient_id == pat, "value"]
         Ypat = dat[dat$channel==paste("LOG", chan, sep="_") & dat$patient_id == pat, "value"]
-        XY_pat = cbind(Xpat, Ypat)
+        XY_pat = cbind(Xpat, Ypat) 
         Ypts[[pat]] = XY_pat
         pat_index = c(pat_index, rep(ind, nrow(XY_pat)))
         pat_id = c(pat_id, rep(pat, nrow(XY_pat)))
@@ -98,12 +99,12 @@ getData_mats = function(chan, mitochan="VDAC1",
         XY_pat = cbind(Xpat, Ypat)
         Ypts[[pat]] = XY_pat
         pat_index = c(pat_index, rep(ind, nrow(XY_pat)))
-        pat_id = c(pat_id, rep(pat, nrow(XY_row)))
+        pat_id = c(pat_id, rep(pat, nrow(XY_pat)))
         ind = ind + 1L
       }
     }
     pat_mat = list2matrix(Ypts)
-    pat_mat = as.matrix(pat_mat)
+    pat_mat = log( as.matrix(pat_mat) )
   } else { pat_mat=NULL }
   
   if(get_patindex){
@@ -149,7 +150,7 @@ scale_mat = function(X, scale=NULL, reverse=FALSE){
 }
 
 myData_transform = function(ctrl_mat, pat_mat=NULL){
-  ctrl_mat = log(ctrl_mat)
+  # ctrl_mat = log(ctrl_mat)
   pca = prcomp(ctrl_mat, scale=FALSE, center=FALSE)
   ctrl_mat = pca$x
   # ctrl_mat = scale(ctrl_mat, center=TRUE, scale=TRUE)
@@ -159,7 +160,7 @@ myData_transform = function(ctrl_mat, pat_mat=NULL){
   ctrl_mat = scale_mat(ctrl_mat, ctrl_sd)
   
   if(!is.null(pat_mat)){
-    pat_mat = log(pat_mat)
+    # pat_mat = log(pat_mat)
     pat_mat = rotate_mat(pat_mat, pca$rotation)
     pat_mat = centre_mat(pat_mat, ctrl_mean)
     pat_mat = scale_mat(pat_mat, ctrl_sd)
@@ -184,6 +185,11 @@ back_transform = function(X, ctrl_mat, parameters=NULL){
       Xnew[, params] = rotate_mat(as.matrix(Xnew[,params]), R=pca$rotation, reverse=TRUE)
     }
   Xnew
+}
+
+log_transform = function(ctrl_mat, pat_mat=NULL){
+  if(!is.null(pat_mat)) return( list(ctrl=log(ctrl_mat), pts=log(pat_mat)) )
+  log(ctrl_mat)
 }
 
 ##
@@ -252,73 +258,6 @@ list2matrix = function(X, rowBind=TRUE){
   }
 }
 
-##
-## DATA TRANSFORMATION
-##
-
-rotate_mat = function(X, R, reverse=FALSE){
-  if(!reverse) return( X%*%R )
-  X%*%solve(R)
-}
-
-centre_mat = function(X, centre=NULL, reverse=FALSE){
-  if(!reverse){
-    if(!is.null(centre)){
-      return( X - vec_rep(centre, nrow(X)))
-    } 
-    return( X - vec_rep(colMeans(X), nrow(X)) )
-  }
-  if(is.null(centre)){ stop("Reverse calculations require centre") }
-  X + vec_rep(centre, nrow(X))
-}
-
-scale_mat = function(X, scale=NULL, reverse=FALSE){
-  if(!reverse){
-    if(!is.null(scale)){
-      return( X / vec_rep(scale, nrow(X)) )
-    }
-    return( X / vec_rep(sqrt(diag(var(X))), nrow(X)) )
-  }
-  if(is.null(scale)){ stop("Reverse calculations require scale") }
-  X * vec_rep(scale, nrow(X))
-}
-
-myData_transform = function(ctrl_mat, pat_mat=NULL){
-  pca = prcomp(ctrl_mat, scale=FALSE, center=FALSE)
-  ctrl_mat = pca$x
-  # ctrl_mat = scale(ctrl_mat, center=TRUE, scale=TRUE)
-  ctrl_mean = colMeans(ctrl_mat)
-  ctrl_mat = centre_mat(ctrl_mat, ctrl_mean)
-  ctrl_sd = sqrt(diag(var(ctrl_mat)))
-  ctrl_mat = scale_mat(ctrl_mat, ctrl_sd)
-  
-  if(!is.null(pat_mat)){
-    pat_mat = rotate_mat(pat_mat, pca$rotation)
-    pat_mat = centre_mat(pat_mat, ctrl_mean)
-    pat_mat = scale_mat(pat_mat, ctrl_sd)
-    return(list(ctrl=ctrl_mat, pts=pat_mat))
-  }
-  ctrl_mat
-}
-
-back_transform = function(X, ctrl_mat){
-  pca = prcomp(ctrl_mat, scale=FALSE, center=FALSE)
-  ctrl_mat = pca$x
-  ctrl_mean = colMeans(ctrl_mat)
-  ctrl_sd = sqrt(diag(var(ctrl_mat)))
-  
-  Xnew = scale_mat(X, scale=ctrl_sd, reverse=TRUE)
-  Xnew = centre_mat(Xnew, centre=ctrl_mean, reverse=TRUE)  
-  Xnew[, grepl("comp\\.1", colnames(Xnew))] = rotate_mat(as.matrix(Xnew[,grepl("comp\\.1", colnames(Xnew))]), R=pca$rotation, reverse=TRUE)     
-  Xnew[, grepl("comp\\.2", colnames(Xnew))] = rotate_mat(as.matrix(Xnew[,grepl("comp\\.2", colnames(Xnew))]), R=pca$rotation, reverse=TRUE)     
-  
-  return(Xnew)
-}
-
-log_transform = function(ctrl_mat, pat_mat=NULL){
-  if(!is.null(pat_mat)) return( list(ctrl=log(ctrl_mat), pts=log(pat_mat)) )
-  log(ctrl_mat)
-}
 
 ##
 ## SAVE & READ OUTPUT
@@ -341,7 +280,7 @@ output_saver = function(outroot, output, folder){
 
 output_reader = function(folder, chan, out_type){
 
-  fp = file.path("./Output", folder, paste0(chan, "_", out_type, ".txt"))
+  fp = file.path("Output", folder, paste0(chan, "_", out_type, ".txt"))
   if(file.exists(fp)) return( read.table(fp, header=TRUE, stringsAsFactors=FALSE) )
   else stop("file does not exist")
 }
@@ -359,34 +298,25 @@ colvector_gen = function(pts){
   colind
 }
 
-pipost_plotter = function(folder, chan, alpha=0.02, allData=TRUE){
+pipost_plotter = function(folder, chan, alpha=0.02){
   
-  dat = read.csv(file.path("..", "rawdat_a.csv"), stringsAsFactors=FALSE)
+  dat = read.csv(file.path("..", "..", "dat.txt"), stringsAsFactors=FALSE)
   sbj = unique(dat$caseno)
-  pts = sort(sbj[grepl("P0.", sbj)])
+  pts = sort(sbj[grepl("P", sbj)])
   npat = length(pts)
   
   pis = list()
-  if(allData){
-    post = output_reader(folder, chan, out_type="POST")
-    for(i in 1:npat){
-      pis[[pts[i]]] = 1 - post[,paste0("probctrl.",i,".")]
-    }
-  } else {
-    for(pat in pts){
-      pis[[pat]] = output_reader(folder, chan, out_type="POST")[,"probctrl"]
-    }
+  post = output_reader(folder, chan, out_type="POST")
+  return(post)
+  for(i in 1:npat){
+    pis[[pts[i]]] = 1 - post[,paste0("probctrl.",i,".")]
   }
-
-  op = par(mar=c(6,6,6,3), cex.main=2, cex.lab=2, cex.axis=1.5)
-  
   stripchart(pis, pch=20, method="jitter", vertical=TRUE, 
              col=rgb(t(col2rgb(palette()[colvector_gen(pts)]))/255, alpha=alpha), 
              group.names=pts,
              main="", ylim=c(0,1), ylab="Deficiency Proportion", 
              xlab="Patient Sample")
   title(main=chan, line=-2, outer=TRUE)
-  par(op)
 }
 
 percentiles = function(xdat, ydat, probs=c(0.975, 0.5, 0.025)){
@@ -402,22 +332,18 @@ percentiles = function(xdat, ydat, probs=c(0.975, 0.5, 0.025)){
 }
 
 priorpost = function(ctrl_data, pat_data, prior=NULL, post, classifs_pat, title="",
-                     mitochan="porin", chan, pat=NULL, reverse_transform=NULL ){
+                     mitochan="VDAC1", chan, pat=NULL ){
   
   ctrl_raw = getData_mats(chan, ctrl_only=TRUE)
   
   xlims = range(c(ctrl_data[,1], pat_data[,1]))
   ylims = range(c(ctrl_data[,2], pat_data[,2]))
   
-  if(!is.null(reverse_transform)){
-    prior = reverse_transform(prior[,grepl("comp", colnames(prior))], ctrl_raw)
-    post = reverse_transform(post[grepl("comp", colnames(post))], ctrl_raw)
-  }
-  
   op = par(mfrow=c(1,2), mar=c(6,6,6,3), cex.main=2, cex.lab=2, cex.axis=1.5)
   
   if(!is.null(prior)){
-    op = par(mfrow=c(2,2))
+    op = par(mfrow=c(2,2), mar=c(6,6,6,3), cex.main=2, cex.lab=2, cex.axis=1.5)
+    
     plot(ctrl_data, pch=20, col=myDarkGrey(0.3), 
          xlab=paste0("log(", mitochan,")"), ylab=paste0("log(",chan,")"),
          xlim=xlims, ylim=ylims)
@@ -482,10 +408,8 @@ MCMCplot = function(folder, chan, pat=NULL, title="", lag=20){
 }
 
 classif_plot = function(ctrl_data=NULL, pat_data, classifs_pat, 
-                        title="", mitochan="raw_porin", chan, pat){
-  xlims = range(c(ctrl_data[,1], pat_data[,1]))
-  ylims = range(c(ctrl_data[,2], pat_data[,2]))
-  
+                        title="", mitochan="VDAC1", chan, pat,
+                        xlims, ylims){
   op = par(mfrow=c(1,1), mar=c(6,6,6,3), cex.main=2, cex.lab=2, cex.axis=1.5)
   
   plot(ctrl_data, pch=20, col=myDarkGrey(0.2), 
@@ -494,6 +418,7 @@ classif_plot = function(ctrl_data=NULL, pat_data, classifs_pat,
   points(pat_data, pch=20, col=classcols(classifs_pat) )
   
   title(main=title, line=-4, outer=TRUE)
+  
   par(op)
 }
 

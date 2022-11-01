@@ -55,6 +55,27 @@ pdf(file.path("PDF", folder, "model_post.pdf"), width=13, height=8)
 }
 dev.off()
 
+pdf(file.path("PDF", folder, "classifs.pdf"), width=13, height=8)
+{
+  op = par(mfrow=c(1,1), mar=c(6,6,6,3), cex.main=2, cex.lab=2, cex.axis=1.5)
+  for(chan in cord){
+    data = getData_mats(chan=chan)
+    ctrl_mat =  data$ctrl
+    xlims = range(c(ctrl_mat[,1], data$pts[,1]))
+    ylims = range(c(ctrl_mat[,2], data$pts[,2]))
+    for(pat in pts){
+      pat_mat = getData_mats(chan=chan, pts=pat)$pts
+      classif_pat = output_reader(folder, chan, pat, "classif")
+      classif_plot(ctrl_data=ctrl_mat, pat_data=pat_mat, 
+                   classifs_pat, 
+                   chan=chan, mitochan=mitochan, pat=pat)
+    } # patients
+  } # channels
+  par(op)
+}
+dev.off()
+
+
 pdf(file.path("PDF", folder, "pi_post.pdf"), width=13, height=8)
 {
   op = par(mfrow=c(1,1), mar=c(6,6,6,3), cex.main=2, cex.lab=2, cex.axis=1.5)
