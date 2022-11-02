@@ -78,7 +78,7 @@ inputs = list()
   input0$MCMCBurnin = 2000
   input0$MCMCThin = 1
   input0$n.chains = 1
-  for(chan in cord[1:2]){
+  for(chan in cord){
     outroot = chan
     inputs[[outroot]] = input0
     inputs[[outroot]]$chan = chan
