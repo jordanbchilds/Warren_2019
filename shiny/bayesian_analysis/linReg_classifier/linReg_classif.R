@@ -12,8 +12,7 @@ modelstring = "
  model {
   # Likelihood of data given model parameters
   for (i in 1:N){
-   Yobs[i] ~ dnorm(Y[i], tau_hat[i])
-   Y[i] = m*Xobs[i] + c
+   Yobs[i] ~ dnorm(m*Xobs[i]+c, tau_hat[i])
    tau_hat[i] = ifelse(class[i]==1, tau_notctrl, tau_ctrl)
    class[i] ~ dbern(probdiff)
   }
@@ -90,7 +89,7 @@ inference = function(input){
     m_est = mean(posterior_ctrl$m)
     tau_m = flex/(sd(posterior_ctrl$m)^2)
     # delta = 1.5*as.numeric(quantile(posterior_ctrl$tau_ctrl,0.5)) # Choose this value so that Tiago's replication dataset never predicts over-expression of CI or CIV
-    delta = 0
+    delta = 0.0
     tau_mean = mean(posterior_ctrl$tau_ctrl) + delta # Precision tau = (1/sd)^2
     tau_sd = sd(posterior_ctrl$tau_ctrl) # Deviation from prior tau should require a lot of contradictory data
     tau_shape = (tau_mean^2)/(tau_sd^2)
@@ -117,7 +116,7 @@ inference = function(input){
     model_pat = jags.model(textConnection(modelstring), data=data_pat, n.chains=n.chains)
     model_pat_priorpred = jags.model(textConnection(modelstring), data=data_pat_priorpred)
     update(model_pat, n.iter=MCMCBurnin)
-    #converge_pat=coda.samples(model=model_pat,variable.names=c("m","c","tau_par","class","probdiff"),n.iter=MCMCUpdates_Report,thin=MCMCUpdates_Thin)
+    # converge_pat=coda.samples(model=model_pat,variable.names=c("m","c","tau_par","class","probdiff"),n.iter=MCMCUpdates_Report,thin=MCMCUpdates_Thin)
     output_pat_post = coda.samples(model=model_pat, n.iter=MCMCOut*MCMCThin, thin=MCMCThin,
                             variable.names=c("m","c","tau_ctrl","tau_notctrl","Ysyn_norm", "Ysyn_def", "class", "probdiff"))
     output_pat_prior = coda.samples(model=model_pat_priorpred,n.iter=MCMCOut, thin=1,
@@ -134,21 +133,21 @@ inference = function(input){
     postpred_ctrl_norm = colQuantiles( posterior_ctrl[,grepl("Ysyn_norm", posterior_ctrl_names)], probs=c(0.025, 0.5, 0.975) )
     postpred_ctrl_def = colQuantiles( posterior_ctrl[,grepl("Ysyn_def", posterior_ctrl_names)], probs=c(0.025, 0.5, 0.975) )
     postpred_ctrl = cbind(X_syn, postpred_ctrl_norm, postpred_ctrl_def)
-    colnames(postpred_ctrl) = c("mitochan", "lwr_norm", "med_norm", "upr_norm", "lwr_def", "med_def", "upr_def")
+    colnames(postpred_ctrl) = c("mitochan", "lwr_norm", "mid_norm", "upr_norm", "lwr_def", "mid_def", "upr_def")
     
     prior_ctrl_names = colnames(prior_ctrl)
     prior_control = prior_ctrl[,c("m", "c", "tau_ctrl", "tau_notctrl", "probdiff")]
     priorpred_ctrl_norm = colQuantiles(prior_ctrl[, grepl("Ysyn_norm", prior_ctrl_names)], probs=c(0.025,0.5,0.975))
     priorpred_ctrl_def = colQuantiles(prior_ctrl[, grepl("Ysyn_def", prior_ctrl_names)], probs=c(0.025,0.5,0.975))
     priorpred_ctrl = cbind(X_syn, priorpred_ctrl_norm, priorpred_ctrl_def)
-    colnames(priorpred_ctrl) = c("mitochan", "lwr_norm", "med_norm", "upr_norm", "lwr_def", "med_def", "upr_def")
+    colnames(priorpred_ctrl) = c("mitochan", "lwr_norm", "mid_norm", "upr_norm", "lwr_def", "mid_def", "upr_def")
     
     posterior_pat_names = colnames(posterior_pat)
     post_pat = posterior_pat[,c("m", "c", "tau_ctrl", "tau_notctrl", "probdiff")]
     postpred_pat_norm = colQuantiles(posterior_pat[,grepl("Ysyn_norm", posterior_pat_names)], probs=c(0.025,0.5,0.975))
     postpred_pat_def = colQuantiles(posterior_pat[,grepl("Ysyn_def", posterior_pat_names)], probs=c(0.025,0.5,0.975))
     postpred_pat = cbind(X_syn, postpred_pat_norm, postpred_pat_def)
-    colnames(postpred_pat) = c("mitochan", "lwr_norm", "med_norm", "upr_norm", "lwr_def", "med_def", "upr_def")
+    colnames(postpred_pat) = c("mitochan", "lwr_norm", "mid_norm", "upr_norm", "lwr_def", "mid_def", "upr_def")
     
     
     prior_pat_names = colnames(prior_pat)
@@ -156,7 +155,7 @@ inference = function(input){
     priorpred_pat_norm = colQuantiles(prior_pat[,grepl("Ysyn_norm", prior_pat_names)], probs=c(0.025,0.5,0.975))
     priorpred_pat_def = colQuantiles(prior_pat[,grepl("Ysyn_def", prior_pat_names)], probs=c(0.025,0.5,0.975))
     priorpred_pat = cbind(X_syn, priorpred_pat_norm, priorpred_pat_def)
-    colnames(priorpred_pat) = c("mitochan", "lwr_norm", "med_norm", "upr_norm", "lwr_def", "med_def", "upr_def")
+    colnames(priorpred_pat) = c("mitochan", "lwr_norm", "mid_norm", "upr_norm", "lwr_def", "mid_def", "upr_def")
     
     ctrl_list = list(post=post_ctrl, postpred=postpred_ctrl, 
                      prior=prior_control, priorpred=priorpred_ctrl,

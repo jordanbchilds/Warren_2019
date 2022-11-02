@@ -285,7 +285,7 @@ priorpost = function(ctrl_data, pat_data=NULL, priorpred, postpred,
        main="Prior Predictive", xlim=xlims, ylim=ylims)
   if(!is.null(pat_data)) points(pat_data, pch=20, cex=1.2, col=myYellow(0.2))
   lines(priorpred[,"mitochan"], priorpred[,"lwr_norm"], lty=2, col=myGreen(0.6), lwd=3)
-  lines(priorpred[,"mitochan"], priorpred[,"med_norm"], lty=1, col=myGreen(0.6), lwd=4)
+  lines(priorpred[,"mitochan"], priorpred[,"mid_norm"], lty=1, col=myGreen(0.6), lwd=4)
   lines(priorpred[,"mitochan"], priorpred[,"upr_norm"], lty=2, col=myGreen(0.6), lwd=3)
   
   plot(ctrl_data, pch=20, col=myGrey(0.1),
@@ -293,7 +293,7 @@ priorpost = function(ctrl_data, pat_data=NULL, priorpred, postpred,
        main="Posterior Predictive", xlim=xlims, ylim=ylims)
   if(!is.null(pat_data)) points(pat_data, pch=20, cex=1.2, col=classcols(classif))
   lines(postpred[,"mitochan"], postpred[,"lwr_norm"], lty=2, col=myPink(0.6), lwd=3)
-  lines(postpred[,"mitochan"], postpred[,"med_norm"], lty=1, col=myPink(0.6), lwd=4)
+  lines(postpred[,"mitochan"], postpred[,"mid_norm"], lty=1, col=myPink(0.6), lwd=4)
   lines(postpred[,"mitochan"], postpred[,"upr_norm"], lty=2, col=myPink(0.6), lwd=3)
   title(main=title, line=-2, outer=TRUE)
   
