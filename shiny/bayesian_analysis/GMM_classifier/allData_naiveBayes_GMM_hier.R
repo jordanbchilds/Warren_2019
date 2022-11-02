@@ -74,8 +74,8 @@ prior_list = list(mean_mu1=mean_mu1, var_mu1=var_mu1,
 inputs = list()
 {
   input0 = list()
-  input0$MCMCOut = 50 # 2000
-  input0$MCMCBurnin = 10 # 2000
+  input0$MCMCOut = 2000
+  input0$MCMCBurnin = 2000
   input0$MCMCThin = 1
   input0$n.chains = 1
   for(chan in cord[1:2]){

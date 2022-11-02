@@ -65,16 +65,15 @@ pdf(file.path("PDF", folder, "classifs.pdf"), width=13, height=8)
     ylims = range(c(ctrl_mat[,2], data$pts[,2]))
     for(pat in pts){
       pat_mat = getData_mats(chan=chan, pts=pat)$pts
-      classif_pat = output_reader(folder, chan, pat, "classif")
+      classifs_pat = output_reader(folder, chan, pat, "classif")[[1]]
       classif_plot(ctrl_data=ctrl_mat, pat_data=pat_mat, 
-                   classifs_pat, 
+                   classifs_pat=classifs_pat, 
                    chan=chan, mitochan=mitochan, pat=pat)
     } # patients
   } # channels
   par(op)
 }
 dev.off()
-
 
 pdf(file.path("PDF", folder, "pi_post.pdf"), width=13, height=8)
 {

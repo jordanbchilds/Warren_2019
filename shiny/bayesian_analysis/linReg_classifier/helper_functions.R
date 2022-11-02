@@ -278,26 +278,25 @@ priorpost = function(ctrl_data, pat_data=NULL, priorpred, postpred,
                      classif=NULL, 
                      chan, mitochan="VDAC1", title="", xlims=NULL, ylims=NULL){
 
-  N_syn = 1e4
-  Xsyn = seq(0, max(c(ctrl_data[,1], pat_data[,1]))*1.5, length.out=N_syn) 
+  op = par(mfrow=c(1,2), mar=c(6,6,6,3), cex.main=2, cex.lab=2, cex.axis=1.5)
   
-  op = par(mfrow=c(1,2))
   plot(ctrl_data, pch=20, cex=0.7, col=myGrey(0.1),
         xlab=paste0("log(",mitochan,")"), ylab=paste0("log(",chan,")"), 
        main="Prior Predictive", xlim=xlims, ylim=ylims)
   if(!is.null(pat_data)) points(pat_data, pch=20, cex=1.2, col=myYellow(0.2))
-  lines(Xsyn, priorpred[,1], lty=2, col=myGreen(0.6), lwd=3)
-  lines(Xsyn, priorpred[,2], lty=1, col=myGreen(0.6), lwd=4)
-  lines(Xsyn, priorpred[,3], lty=2, col=myGreen(0.6), lwd=3)
+  lines(priorpred[,"mitochan"], priorpred[,"lwr_norm"], lty=2, col=myGreen(0.6), lwd=3)
+  lines(priorpred[,"mitochan"], priorpred[,"med_norm"], lty=1, col=myGreen(0.6), lwd=4)
+  lines(priorpred[,"mitochan"], priorpred[,"upr_norm"], lty=2, col=myGreen(0.6), lwd=3)
   
   plot(ctrl_data, pch=20, col=myGrey(0.1),
        xlab=paste0("log(",mitochan,")"), ylab=paste0("log(",chan,")"), 
        main="Posterior Predictive", xlim=xlims, ylim=ylims)
   if(!is.null(pat_data)) points(pat_data, pch=20, cex=1.2, col=classcols(classif))
-  lines(Xsyn, postpred[,1], lty=2, col=myPink(0.6), lwd=3)
-  lines(Xsyn, postpred[,2], lty=1, col=myPink(0.6), lwd=4)
-  lines(Xsyn, postpred[,3], lty=2, col=myPink(0.6), lwd=3)
+  lines(postpred[,"mitochan"], postpred[,"lwr_norm"], lty=2, col=myPink(0.6), lwd=3)
+  lines(postpred[,"mitochan"], postpred[,"med_norm"], lty=1, col=myPink(0.6), lwd=4)
+  lines(postpred[,"mitochan"], postpred[,"upr_norm"], lty=2, col=myPink(0.6), lwd=3)
   title(main=title, line=-2, outer=TRUE)
+  
   par(op)
 }
 
@@ -306,7 +305,7 @@ pipost_plotter = function(chan, folder, pts, alpha=0.05){
   npat = length(pts)
   pis = list()
   for(pat in pts){
-    pis[[pat]] = 1 - output_reader(folder, chan, pat, out_type="POST")[,"probdiff"]
+    pis[[pat]] = output_reader(folder, chan, pat, out_type="POST")[,"probdiff"]
   }
 
   title = paste( chan )
