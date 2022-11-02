@@ -83,7 +83,7 @@ inference = function(input){
     
     ### patient inference
     # pateint priors
-    flex = 0.01
+    flex = 0.2
     c_est = mean(posterior_ctrl$c)
     tau_c = flex/(sd(posterior_ctrl$c)^2)
     m_est = mean(posterior_ctrl$m)
@@ -96,7 +96,7 @@ inference = function(input){
     tau_rate = tau_mean/(tau_sd^2)
     
     gamma_mode = 20 
-    gamma_sd = 10 
+    gamma_sd = 5
     rate_gamma = (gamma_mode+sqrt(gamma_mode^2+4*gamma_mode^2))/(2*gamma_sd^2)
     shape_gamma = 1+gamma_mode*rate_gamma
 
@@ -179,7 +179,7 @@ pts = sort( ptsAll[grepl("P", ptsAll)] )
 inputs = list()
 {
   input0 = list()
-  input0$MCMCOut = 2000
+  input0$MCMCOut = 1000
   input0$MCMCBurnin = 1000
   input0$MCMCThin = 50
   input0$n.chains = 1

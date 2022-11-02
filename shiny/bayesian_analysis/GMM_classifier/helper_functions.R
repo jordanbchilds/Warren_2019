@@ -209,7 +209,7 @@ myYellow = function(alpha) rgb(225/255,200/255,50/255, alpha)
 myPink = function(alpha) rgb(255/255,62/255,150/255, alpha)
 myPurple = function(alpha) rgb(160/255, 32/255, 240/255, alpha)
 
-cramp = colorRamp(c(myRed(0.2),myBlue(0.2)), alpha=TRUE)
+cramp = colorRamp(c(myBlue(0.2),myRed(0.2)), alpha=TRUE)
 # rgb(...) specifies a colour using standard RGB, where 1 is the maxColorValue
 # 0.25 determines how transparent the colour is, 1 being opaque 
 # cramp is a function which generates colours on a scale between two specifies colours
@@ -300,16 +300,16 @@ colvector_gen = function(pts){
 
 pipost_plotter = function(folder, chan, alpha=0.02){
   
-  dat = read.csv(file.path("..", "..", "dat.txt"), stringsAsFactors=FALSE)
-  sbj = unique(dat$caseno)
+  dat = fread(file.path("..", "..", "dat.txt"), stringsAsFactors=FALSE, header=TRUE)
+  sbj = unique(dat$patient_id)
   pts = sort(sbj[grepl("P", sbj)])
   npat = length(pts)
   
   pis = list()
   post = output_reader(folder, chan, out_type="POST")
-  return(post)
+
   for(i in 1:npat){
-    pis[[pts[i]]] = 1 - post[,paste0("probctrl.",i,".")]
+    pis[[pts[i]]] = post[,paste0("probDef.",i,".")]
   }
   stripchart(pis, pch=20, method="jitter", vertical=TRUE, 
              col=rgb(t(col2rgb(palette()[colvector_gen(pts)]))/255, alpha=alpha), 

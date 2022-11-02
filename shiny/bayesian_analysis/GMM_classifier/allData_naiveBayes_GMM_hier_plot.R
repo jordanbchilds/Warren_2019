@@ -16,6 +16,7 @@ pts = sort( ptsAll[grepl("P", ptsAll)] )
 prior = read.table(file.path("Output", folder, "PRIOR.txt"), 
                    header=TRUE, stringsAsFactors=FALSE)
 
+
 pdf(file.path("PDF", folder, "MCMC.pdf"), width=13, height=8)
 { 
   for(chan in cord){
