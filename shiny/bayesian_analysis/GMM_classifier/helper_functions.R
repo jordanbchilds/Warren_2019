@@ -298,39 +298,6 @@ colvector_gen = function(pts){
   colind
 }
 
-pipost_plotter = function(folder, chan, alpha=0.02){
-  
-  dat = fread(file.path("..", "..", "dat.txt"), stringsAsFactors=FALSE, header=TRUE)
-  sbj = unique(dat$patient_id)
-  pts = sort(sbj[grepl("P", sbj)])
-  npat = length(pts)
-  
-  pis = list()
-  post = output_reader(folder, chan, out_type="POST")
-
-  for(i in 1:npat){
-    pis[[pts[i]]] = post[,paste0("probDef.",i,".")]
-  }
-  stripchart(pis, pch=20, method="jitter", vertical=TRUE, 
-             col=rgb(t(col2rgb(palette()[colvector_gen(pts)]))/255, alpha=alpha), 
-             group.names=pts,
-             main="", ylim=c(0,1), ylab="Deficiency Proportion", 
-             xlab="Patient Sample")
-  title(main=chan, line=-2, outer=TRUE)
-}
-
-percentiles = function(xdat, ydat, probs=c(0.975, 0.5, 0.025)){
-  dens = kde2d(xdat, ydat, n=200); ## estimate the z counts
-  dx = diff(dens$x[1:2])
-  dy = diff(dens$y[1:2])
-  sz = sort(dens$z)
-  c1 = cumsum(sz) * dx * dy
-  levs = sapply(probs, function(x) {
-    approx(c1, sz, xout = 1 - x)$y
-  })
-  return( list(dens=dens, levels=levs, probs=probs))
-}
-
 priorpost = function(ctrl_data, pat_data, prior=NULL, post, classifs_pat, title="",
                      mitochan="VDAC1", chan, pat=NULL ){
   
@@ -382,7 +349,7 @@ MCMCplot = function(folder, chan, pat=NULL, title="", lag=20){
   post = output_reader(folder, chan, out_type="POST")
   prior = read.table(file.path("Output", folder, "PRIOR.txt"), 
                      header=TRUE, stringsAsFactors=FALSE)
-
+  
   col.names = colnames(post)
   n.chains = length(post)
   op = par(mfrow=c(2,3), cex.main=2, cex.lab=2, cex.axis=1.5,
@@ -421,6 +388,74 @@ classif_plot = function(ctrl_data=NULL, pat_data, classifs_pat,
   
   par(op)
 }
+
+percentiles = function(xdat, ydat, probs=c(0.975, 0.5, 0.025)){
+  dens = kde2d(xdat, ydat, n=200); ## estimate the z counts
+  dx = diff(dens$x[1:2])
+  dy = diff(dens$y[1:2])
+  sz = sort(dens$z)
+  c1 = cumsum(sz) * dx * dy
+  levs = sapply(probs, function(x) {
+    approx(c1, sz, xout = 1 - x)$y
+  })
+  return( list(dens=dens, levels=levs, probs=probs))
+}
+
+pipost_plotter = function(folder, chan, alpha=0.02){
+  
+  dat = fread(file.path("..", "..", "dat.txt"), stringsAsFactors=FALSE, header=TRUE)
+  sbj = unique(dat$patient_id)
+  pts = sort(sbj[grepl("P", sbj)])
+  npat = length(pts)
+  
+  pis = list()
+  post = output_reader(folder, chan, out_type="POST")
+
+  for(i in 1:npat){
+    pis[[pts[i]]] = post[,paste0("probDef.",i,".")]
+  }
+  stripchart(pis, pch=20, method="jitter", vertical=TRUE, 
+             col=rgb(t(col2rgb(palette()[colvector_gen(pts)]))/255, alpha=alpha), 
+             group.names=pts,
+             main="", ylim=c(0,1), ylab="Deficiency Proportion", 
+             xlab="Patient Sample")
+  title(main=chan, line=-2, outer=TRUE)
+}
+
+pipost_plotter_v2 = function(chan, folder, pts, alpha=0.01){
+  op = par(mfrow=c(1,1), mar=c(6,6,6,3), cex.main=2, cex.lab=2, cex.axis=1.5)
+  
+  Npts = length(pts)
+  pis = list()
+  boots = list()
+  
+  post = output_reader(folder, chan, out_type="POST")
+  
+  for(i in 1:length(pts)){
+    boots_df = read.table(file.path("CharlotteWarrenBootstrap", "BootstrapParticles", paste0(pts[i], "_", chan, ".txt")),
+                          header=TRUE, stringsAsFactors=FALSE)
+    boots[[pts[i]]] = as.vector(1 - boots_df[,"med"])
+    pis[[pts[i]]] = post[,paste0("probDef.",i,".")]
+  }
+  # return(list(boots, pis))
+
+  
+  stripchart(pis, pch=20, method="jitter", vertical=TRUE, 
+             col=myGreen(alpha),
+             at=1:Npts,
+             ylim=c(0,1),
+             main=chan, ylab="Deficiency Proportion", 
+             xlab="Patient" )
+  stripchart(boots, pch=20, method="jitter", vertical=TRUE, add=TRUE, 
+             at=1:Npts,
+             col=myPink(alpha))
+  
+  par(op)
+}
+
+pipost_plotter_v2("NDUFB8", folder, pts)
+
+
 
 ##
 ## all data specialty functions

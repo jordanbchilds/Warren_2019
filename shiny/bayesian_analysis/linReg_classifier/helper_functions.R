@@ -285,7 +285,7 @@ priorpost = function(ctrl_data, pat_data=NULL, priorpred, postpred,
        main="Prior Predictive", xlim=xlims, ylim=ylims)
   if(!is.null(pat_data)) points(pat_data, pch=20, cex=1.2, col=myYellow(0.2))
   lines(priorpred[,"mitochan"], priorpred[,"lwr_norm"], lty=2, col=myGreen(0.6), lwd=3)
-  lines(priorpred[,"mitochan"], priorpred[,"med_norm"], lty=1, col=myGreen(0.6), lwd=4)
+  lines(priorpred[,"mitochan"], priorpred[,"mid_norm"], lty=1, col=myGreen(0.6), lwd=4)
   lines(priorpred[,"mitochan"], priorpred[,"upr_norm"], lty=2, col=myGreen(0.6), lwd=3)
   
   plot(ctrl_data, pch=20, col=myGrey(0.1),
@@ -293,7 +293,7 @@ priorpost = function(ctrl_data, pat_data=NULL, priorpred, postpred,
        main="Posterior Predictive", xlim=xlims, ylim=ylims)
   if(!is.null(pat_data)) points(pat_data, pch=20, cex=1.2, col=classcols(classif))
   lines(postpred[,"mitochan"], postpred[,"lwr_norm"], lty=2, col=myPink(0.6), lwd=3)
-  lines(postpred[,"mitochan"], postpred[,"med_norm"], lty=1, col=myPink(0.6), lwd=4)
+  lines(postpred[,"mitochan"], postpred[,"mid_norm"], lty=1, col=myPink(0.6), lwd=4)
   lines(postpred[,"mitochan"], postpred[,"upr_norm"], lty=2, col=myPink(0.6), lwd=3)
   title(main=title, line=-2, outer=TRUE)
   
@@ -310,7 +310,7 @@ compare_preds = function(ctrl_data, pat_data, post, classif,
        main="Prior Predictive", xlim=xlims, ylim=ylims)
   points(pat_data, pch=20, cex=1.2, col=classcols(classif))
   lines(post[,"mitochan"], post[,"lwr_def"], lty=2, col=myRed(0.6), lwd=3)
-  lines(post[,"mitochan"], post[,"med_def"], lty=1, col=myRed(0.6), lwd=4)
+  lines(post[,"mitochan"], post[,"mid_def"], lty=1, col=myRed(0.6), lwd=4)
   lines(post[,"mitochan"], post[,"upr_def"], lty=2, col=myRed(0.6), lwd=3)
   
   plot(ctrl_data, pch=20, col=myGrey(0.1),
@@ -318,7 +318,7 @@ compare_preds = function(ctrl_data, pat_data, post, classif,
        main="Posterior Predictive", xlim=xlims, ylim=ylims)
   points(pat_data, pch=20, cex=1.2, col=classcols(classif))
   lines(post[,"mitochan"], post[,"lwr_norm"], lty=2, col=myBlue(0.6), lwd=3)
-  lines(post[,"mitochan"], post[,"med_norm"], lty=1, col=myBlue(0.6), lwd=4)
+  lines(post[,"mitochan"], post[,"mid_norm"], lty=1, col=myBlue(0.6), lwd=4)
   lines(post[,"mitochan"], post[,"upr_norm"], lty=2, col=myBlue(0.6), lwd=3)
   title(main=title, line=-2, outer=TRUE)
   
@@ -329,6 +329,7 @@ compare_preds = function(ctrl_data, pat_data, post, classif,
 pipost_plotter = function(chan, folder, pts, alpha=0.05){
   npat = length(pts)
   pis = list()
+
   for(pat in pts){
     pis[[pat]] = output_reader(folder, chan, pat, out_type="POST")[,"probdiff"]
   }
@@ -343,34 +344,31 @@ pipost_plotter = function(chan, folder, pts, alpha=0.05){
              xlab="Patient Sample")
 }
 
-pipost_plotter_v2 = function(channels, pts, folder, alpha=0.01){
-  npat = length(pts)
+pipost_plotter_v2 = function(chan, folder, pts, alpha=0.01){
+  
+  Npts = length(pts)
   pis = list()
+  boots = list()
+  op = par(mfrow=c(1,1), mar=c(6,6,6,3), cex.main=2, cex.lab=2, cex.axis=1.5)
   for(pat in pts){
-    for(chan in channels){
-      pis[[paste(pat, chan, sep="_")]] = 1 - output_reader(folder, chan, pat, out_type="POST")[,"probdiff"]
-    }
+      boots_df = read.table(file.path("CharlotteWarrenBootstrap", "BootstrapParticles", paste0(pat, "_", chan, ".txt")),
+                       header=TRUE, stringsAsFactors=FALSE)
+      boots[[pat]] = as.vector(1 - as.vector(boots_df[,"med"]))
+      pis[[pat]] = output_reader(folder, chan, pat, out_type="POST")[,"probdiff"]
   }
   
   stripchart(pis, pch=20, method="jitter", vertical=TRUE, 
-             col=rgb(t(col2rgb(rep(palette()[1:length(channels) + 1], length(pts))))/255, alpha=alpha),
-             at=1:(length(channels)*length(pts)), 
-             xaxt="n", ylim=c(0,1),
-             main="", ylab="Deficiency Proportion", 
+             col=myGreen(alpha),
+             at=1:Npts,
+             ylim=c(0,1),
+             main=chan, ylab="Deficiency Proportion", 
              xlab="Patient" )
-  abline( v=(0:length(pts)-1)*3+3.5, lwd=4, lty="dotted", col=myGrey(0.2))
-  axis(1, at=(1:length(pts)-1)*3+2, labels=pts)
-  legend("topright", legend=channels, pch=20, col=rep(palette()[1:length(channels) + 1]),
-         cex=1.5, bty="o", bg="white", title="channels")
+  stripchart(boots, pch=20, method="jitter", vertical=TRUE, add=TRUE, 
+             at=1:Npts,
+             col=myPink(alpha))
   
-  
+  par(op)
 }
-
-
-
-
-
-
 
 
 

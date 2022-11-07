@@ -3,7 +3,7 @@ library(MASS)
 library(parallel)
 source("helper_functions.R", local=TRUE)
 
-folder = "linReg_classifier"
+folder = "linReg_classifier_flexOne"
 
 dir.create(file.path("Output"), showWarnings = FALSE)
 dir.create(file.path("Output", folder), showWarnings = FALSE)
@@ -83,7 +83,7 @@ inference = function(input){
     
     ### patient inference
     # pateint priors
-    flex = 0.2
+    flex = 1
     c_est = mean(posterior_ctrl$c)
     tau_c = flex/(sd(posterior_ctrl$c)^2)
     m_est = mean(posterior_ctrl$m)

@@ -75,6 +75,14 @@ pdf(file.path("PDF", folder, "pi_post.pdf"), width=13, height=8)
 }
 dev.off()
 
+pdf(file.path("PDF", folder, "pi_comp.pdf"), width=13, height=8)
+{   
+  for(chan in cord){
+    pipost_plotter_v2(chan, folder, pts) 
+  }
+}
+dev.off()
+
 pdf(file.path("PDF", folder, "classifs.pdf"), width=11, height=7)
 {
   op = par(mfrow=c(1,1), mar=c(6,6,6,3), cex.lab=2, cex.main=2, cex.axis=1.5)
