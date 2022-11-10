@@ -74,7 +74,7 @@ inputs = list()
   input0$n.chains = 1
   for(chan in cord){
     for(pat in pts){
-      outroot = chan
+      outroot = paste(chan, pat, sep="_")
       inputs[[outroot]] = input0
       inputs[[outroot]]$chan = chan
       inputs[[outroot]]$pts = pat
