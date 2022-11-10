@@ -453,10 +453,6 @@ pipost_plotter_v2 = function(chan, folder, pts, alpha=0.01){
   par(op)
 }
 
-pipost_plotter_v2("NDUFB8", folder, pts)
-
-
-
 ##
 ## all data specialty functions
 ##
