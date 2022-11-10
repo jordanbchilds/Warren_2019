@@ -1,6 +1,6 @@
 library("parallel")
 library("rstan")
-source("helper_functions.R", local=TRUE)
+source("helper_functions_v0.R", local=TRUE)
 
 folder = "naiveBayes_GMM"
 
@@ -53,7 +53,7 @@ inference = function(input){
   n_1 = 100
   S_1 = matrix(c(3^2, 0, 0, 1^2), nrow=p, ncol=p, byrow=TRUE)*(n_1-p-1)
   n_2 = 50
-  S_2 = matrix(c(20^2,0,0,20^2), nrow=p, ncol=p, byrow=TRUE)*(n_2-p-1)
+  S_2 = matrix(c(10^2,0,0,10^2), nrow=p, ncol=p, byrow=TRUE)*(n_2-p-1)
   
   alpha = 1
   beta = 1
@@ -102,7 +102,7 @@ for(outroot in names(gmm_output)){
 }
 
 ### prior beliefs
-output_prior = stan("allData_GMM_prior.stan", data=prior_list, chains=1, 
+output_prior = stan("naiveBayes_GMM_prior.stan", data=prior_list, chains=1, 
                     iter=1e4, warmup=0, thin=1)
 
 prior_all= as.matrix(output_prior)
