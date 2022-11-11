@@ -50,7 +50,7 @@ inference = function(input){
   var_mu1=  matrix(c(0.5^2, 0, 0, 0.5^2), ncol=p, nrow=p, byrow=TRUE) 
   var_mu2 = 5^2*diag(p)
   
-  n_1 = 1000
+  n_1 = 500
   S_1 = matrix(c(3^2, 0, 0, 1^2), nrow=p, ncol=p, byrow=TRUE)*(n_1-p-1)
   n_2 = 50
   S_2 = matrix(c(10^2,0,0,10^2), nrow=p, ncol=p, byrow=TRUE)*(n_2-p-1)
