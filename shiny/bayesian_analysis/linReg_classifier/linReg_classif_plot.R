@@ -1,7 +1,7 @@
 library(MASS)
 source("helper_functions.R", local = TRUE)
 
-folder = "linReg_classifier"
+folder = "linReg_classifier_flexTen"
 
 dir.create("PDF", showWarnings=FALSE)
 dir.create(file.path("PDF",folder), showWarnings=FALSE)
@@ -107,10 +107,13 @@ pdf(file.path("PDF", folder, "pi_post.pdf"), width=13, height=8)
 }
 dev.off()
 
-
-
-
-
+pdf(file.path("PDF", folder, "pi_comp.pdf"), width=13, height=8)
+{
+  for(chan in cord){
+    pipost_plotter_v2(chan, pts=pts, folder=folder) 
+  }
+}
+dev.off()
 
 
 
