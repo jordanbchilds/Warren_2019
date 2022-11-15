@@ -32,7 +32,7 @@ modelstring = "
  }
 "
 
-# inferenecce 
+# inference function
 inference = function(input){
   with(c(input),{
     data_mats = getData_mats(chan=chan, pts=pat)
@@ -96,9 +96,13 @@ inference = function(input){
     tau_rate = tau_mean/(tau_sd^2)
     
     gamma_mode = 20 
+    gamma_mean = 20
     gamma_sd = 5
-    rate_gamma = (gamma_mode+sqrt(gamma_mode^2+4*gamma_mode^2))/(2*gamma_sd^2)
-    shape_gamma = 1+gamma_mode*rate_gamma
+    # I have no idea where these have come from..?
+    # rate_gamma = (gamma_mode+sqrt(gamma_mode^2+4*gamma_mode^2))/(2*gamma_sd^2)
+    # shape_gamma = 1+gamma_mode*rate_gamma
+    rate_gamma = gamma_mean^2 / gamma_sd^2
+    shape_gamma = gamma_mean / gamma_sd^2
 
     data_pat = list(Xobs=pat_mat[,1], Yobs=pat_mat[,2], N=Npat, Nsyn=N_syn,
                     Xsyn=X_syn,

@@ -8,7 +8,6 @@ dir.create(file.path("PDF",folder), showWarnings=FALSE)
 
 cord = c("NDUFB8", "NDUFA13", "SDHA", "UqCRC2", "COX4+4L2", "MTCO1", "OSCP")
 mitochan = "VDAC1"
-
 dat = getData("../../dat.txt", cord)
 ptsAll = unique(dat$patient_id)
 pts = sort( ptsAll[grepl("P", ptsAll)] )
@@ -52,6 +51,7 @@ pdf(file.path("PDF", folder, "model_post.pdf"), width=13, height=8)
                 xlims=xlims, ylims=ylims)
     } # patients
   } # channels
+  par(op)
 }
 dev.off()
 
