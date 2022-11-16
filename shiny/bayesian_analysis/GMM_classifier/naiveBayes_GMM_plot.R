@@ -92,12 +92,13 @@ pdf(file.path("PDF", folder, "classifs.pdf"), width=11, height=7)
 {
   op = par(mfrow=c(1,1), mar=c(6,6,6,3), cex.lab=2, cex.main=2, cex.axis=1.5)
   for(chan in cord){
-    data =  getData_mats(chan=chan, pts=pat )
-    xlims = range(c(data$ctrl[,1], data$pts[,1]))
-    ylims = range(c(data$ctrl[,2], data$pts[,2]))
-    
     for(pat in pts){
       outroot = paste(chan, pat, sep="_")
+      
+      data =  getData_mats(chan=chan, pts=pat )
+      xlims = range(c(data$ctrl[,1], data$pts[,1]))
+      ylims = range(c(data$ctrl[,2], data$pts[,2]))
+      
       ctrl_data = data$ctrl
       pat_data = data$pts
       classif_pat = output_reader(folder, outroot, out_type="CLASS")[[1]]

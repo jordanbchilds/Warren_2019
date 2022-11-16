@@ -18,17 +18,24 @@ pts = sort( ptsAll[grepl("P", ptsAll)] )
 
 pdf(file.path("PDF", folder, "MCMC.pdf"), width=13, height=8)
 { 
+  op = par(mfrow=c(2,3), cex.main=1.5, cex.lab=1.5, cex.axis=1.5)
   for(chan in cord){
     outroot_ctrl = paste(chan, "CONTROL", sep="_")
-      
+
     # MCMCplot(folder, chan, lag=100, 
     #            title=paste(chan, "CONTROL"))
     for(pat in pts){
       outroot_pat = paste(chan, pat, sep="_")
-      MCMCplot(folder, chan, pat, lag=100,
+      
+      prior = output_reader(folder, chan, pat, out_type="PRIOR")
+      post = output_reader(folder, chan, pat, out_type="POST")
+      ctrl_prior = output_reader(folder, chan, pat="CONTROL", out_type="POST")
+      
+      MCMCplot(post, prior, ctrl_prior, lag=100,
                title=paste(chan, pat))
     } # channel
   } # patient
+  par(op)
 }
 dev.off()
 

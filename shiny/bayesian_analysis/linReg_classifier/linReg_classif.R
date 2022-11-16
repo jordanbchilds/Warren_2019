@@ -3,10 +3,18 @@ library(MASS)
 library(parallel)
 source("helper_functions.R", local=TRUE)
 
-folder = "linReg_classifier_flexTen"
+folder = "linReg_classifier_flexOne"
 
 dir.create(file.path("Output"), showWarnings = FALSE)
 dir.create(file.path("Output", folder), showWarnings = FALSE)
+
+cord = c("NDUFB8", "NDUFA13", "SDHA", "UqCRC2", "COX4+4L2", "MTCO1", "OSCP")
+mitochan = "VDAC1"
+
+dat = getData("../../dat.txt", cord)
+
+ptsAll = unique(dat$patient_id)
+pts = sort( ptsAll[grepl("P", ptsAll)] )
 
 modelstring = "
  model {
@@ -83,14 +91,13 @@ inference = function(input){
     
     ### patient inference
     # pateint priors
-    flex = 10
+    flex = 1
     c_est = mean(posterior_ctrl$c)
     tau_c = flex/(sd(posterior_ctrl$c)^2)
     m_est = mean(posterior_ctrl$m)
     tau_m = flex/(sd(posterior_ctrl$m)^2)
     # delta = 1.5*as.numeric(quantile(posterior_ctrl$tau_ctrl,0.5)) # Choose this value so that Tiago's replication dataset never predicts over-expression of CI or CIV
-    delta = 0.0
-    tau_mean = mean(posterior_ctrl$tau_ctrl) + delta # Precision tau = (1/sd)^2
+    tau_mean = mean(posterior_ctrl$tau_ctrl)  # Precision tau = (1/sd)^2
     tau_sd = sd(posterior_ctrl$tau_ctrl) # Deviation from prior tau should require a lot of contradictory data
     tau_shape = (tau_mean^2)/(tau_sd^2)
     tau_rate = tau_mean/(tau_sd^2)
@@ -171,14 +178,6 @@ inference = function(input){
     return( list(ctrl=ctrl_list, pat=pat_list) )
   })
 }
-
-cord = c("NDUFB8", "NDUFA13", "SDHA", "UqCRC2", "COX4+4L2", "MTCO1", "OSCP")
-mitochan = "VDAC1"
-
-dat = getData("../../dat.txt", cord)
-
-ptsAll = unique(dat$patient_id)
-pts = sort( ptsAll[grepl("P", ptsAll)] )
 
 inputs = list()
 {

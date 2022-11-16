@@ -27,36 +27,36 @@ getData = function(fname, cord, mitochan="VDAC1"){
   dat$type[dat$channel=="xCoord"] = "xCoord"
   dat$type[dat$channel=="yCoord"] = "yCoord"
   
-  # dat$outlier_diff = "NODIFF"
-  # dat$regression_diff = "NODIFF"
-  # dat$z_diff = "NODIFF"
-  # dat$z = 0
-  # 
-  # dat$chstr = dat$ch
-  # transform = log
-  # dat_r = dat[dat$type=="Mean intensity",]
-  # dat_r$type = "r (VDAC1)"
-  # dat_theta = dat[dat$type=="Mean intensity",]
-  # dat_theta$type = "theta (VDAC1)"
-  # 
-  # for(pid in unique(dat$patrep_id)){
-  #   for(ch in unique(dat$ch)){
-  #     dt = dat[(dat$patrep_id==pid)&(dat$type=="Mean intensity"),]
-  # 
-  #     isch = as.character(dt$ch)==ch
-  #     ismito = as.character(dt$ch)==mitochan
-  #     prot = dt[isch,]
-  #     mito = dt[ismito,]
-  # 
-  #     x = mito$value
-  #     y = prot$value
-  #     dat_r$value[(dat_r$patrep_id==pid)&(as.character(dat_r$ch)==ch)] = sqrt(x^2+y^2)
-  #     dat_r$channel[(dat_r$patrep_id==pid)&(as.character(dat_r$ch)==ch)] = paste("RADIUS",ch,sep="_")
-  #     dat_theta$value[(dat_theta$patrep_id==pid)&(as.character(dat_theta$ch)==ch)] = 360*atan(y/x)/(2*pi)
-  #     dat_theta$channel[(dat_theta$patrep_id==pid)&(as.character(dat_theta$ch)==ch)] = paste("THETA",ch,sep="_")
-  #   }
-  # }
-  # dat=rbind(dat,dat_r,dat_theta)
+  dat$outlier_diff = "NODIFF"
+  dat$regression_diff = "NODIFF"
+  dat$z_diff = "NODIFF"
+  dat$z = 0
+
+  dat$chstr = dat$ch
+  transform = log
+  dat_r = dat[dat$type=="Mean intensity",]
+  dat_r$type = "r (VDAC1)"
+  dat_theta = dat[dat$type=="Mean intensity",]
+  dat_theta$type = "theta (VDAC1)"
+
+  for(pid in unique(dat$patrep_id)){
+    for(ch in unique(dat$ch)){
+      dt = dat[(dat$patrep_id==pid)&(dat$type=="Mean intensity"),]
+
+      isch = as.character(dt$ch)==ch
+      ismito = as.character(dt$ch)==mitochan
+      prot = dt[isch,]
+      mito = dt[ismito,]
+
+      x = mito$value
+      y = prot$value
+      dat_r$value[(dat_r$patrep_id==pid)&(as.character(dat_r$ch)==ch)] = sqrt(x^2+y^2)
+      dat_r$channel[(dat_r$patrep_id==pid)&(as.character(dat_r$ch)==ch)] = paste("RADIUS",ch,sep="_")
+      dat_theta$value[(dat_theta$patrep_id==pid)&(as.character(dat_theta$ch)==ch)] = 360*atan(y/x)/(2*pi)
+      dat_theta$channel[(dat_theta$patrep_id==pid)&(as.character(dat_theta$ch)==ch)] = paste("THETA",ch,sep="_")
+    }
+  }
+  dat=rbind(dat,dat_r,dat_theta)
   return(dat)
 }
 
@@ -132,7 +132,6 @@ index_creator = function(Npops, ind){
   }
 }
 
-
 ##
 ## COLOURS
 ##
@@ -164,6 +163,11 @@ classcols = function(classif){
   return(rgb(rgbvals[,1],rgbvals[,2],rgbvals[,3], alpha=rgbvals[,4]))
 }
 
+
+##
+## GEN FUNCTIONS
+##
+
 colQuantiles = function(x, probs=0.5){
   quants = matrix(NA, nrow=ncol(x), ncol=length(probs))
   for(i in 1:ncol(x)){
@@ -172,10 +176,6 @@ colQuantiles = function(x, probs=0.5){
   colnames(quants) = probs
   return(quants)
 }
-
-##
-## GEN FUNCTIONS
-##
 
 vec_rep = function(x, n, byRow=TRUE){
   out = matrix(x, nrow=n, ncol=length(x), byrow=TRUE)
@@ -206,7 +206,7 @@ log_transform = function(ctrl_mat, pat_mat=NULL){
 }
 
 ##
-## READ & SAVERS AOUTPUT
+## READERS & SAVERS AOUTPUT
 ##
 
 output_saver = function(output, folder, outroot){
@@ -229,7 +229,7 @@ output_reader = function(folder, chan, pat, out_type){
   
   fp = file.path("Output", folder, paste0(outroot, "_", out_type, ".txt"))
   if(file.exists(fp)) return( read.table(fp, header=TRUE, stringsAsFactors=FALSE) )
-  else stop("file does not exist")
+  else stop(paste("file does not exist\n", fp))
 }
 
 ##
@@ -247,14 +247,10 @@ classif_plot = function(ctrl_data, pat_data, classifs_pat, chan, mitochan, pat){
     points(pat_data, pch=20, col=classcols(classifs_pat))
   }
   
-MCMCplot = function(folder, chan, pat, title="", lag=20){
-  
-    post = output_reader(folder, chan, pat, out_type="POST")
-    prior = output_reader(folder, chan, pat,  out_type="PRIOR")
-    
+MCMCplot = function(post, prior, ctrl_prior=NULL, title="", lag=20){
     col.names = colnames(post)
     n.chains = length(post)
-    par(mfrow=c(2,3))
+
     for(param in col.names){
       post_vec = post[[param]]
       plot(ts(post_vec), xlab="Iteration", ylab=paste(param), 
@@ -266,9 +262,28 @@ MCMCplot = function(folder, chan, pat, title="", lag=20){
         plot(NA, type='n', xlim=c(0,lag), ylim=c(0,1), 
              xlab="lag index", ylab="ACF", main="")
       }
+      
+      xlims = range(post[[param]])
+      ylims = c(0,max( density(post[[param]])$y ))
+      if(param %in% colnames(prior) & is.null(ctrl_prior)){
+        xlims = range(c(post[[param]], prior[[param]]))
+      #   ylims = c(0,max(c(density(post[[param]])$y, density(prior[[param]])$y)))
+      } else if( !(param %in% colnames(prior)) & (!is.null(ctrl_prior) & param %in% colnames(ctrl_prior))){
+        xlims = range(c(post[[param]], ctrl_prior[[param]]))
+      #ylims = c(0,max(c(density(post[[param]])$y, density(ctrl_prior[[param]])$y)))
+      } else if( param %in% colnames(prior) & (!is.null(ctrl_prior) & param %in% colnames(ctrl_prior))){
+        xlims = range(c(post[[param]], prior[[param]], ctrl_prior[[param]]))
+      # ylims = c(0,c(density(post[[param]])$y, density(prior[[param]])$y, density(ctrl_prior[[param]])$y))
+      }
+      
       plot(density(post[[param]]), lwd=2, col="blue", xlab=paste(param), ylab="Density",
-           main="")
-      if(param %in% colnames(prior)) lines(density(prior[[param]]), lwd=2, col="green")
+           main="", xlim=xlims, ylim=ylims*2)
+      if(param %in% colnames(prior)) lines(density(prior[[param]]), lwd=2, col="forestgreen")
+      if(!is.null(ctrl_prior) & param %in% colnames(ctrl_prior)){
+        lines(density(ctrl_prior[[param]]), lwd=2, col="darkorange")
+      }
+      legend("topright", col=c("blue", "forestgreen", "darkorange"), 
+             lty=1, lwd=2, legend=c("pat post", "pat prior", "ctrl post"))
       
       title(main=title, line=-1, outer=TRUE, cex.main=1.6)
     }
