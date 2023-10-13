@@ -138,9 +138,7 @@ for(chan in channels) {
   }
 }
 
-
-
-ncores = 6
+ncores = detectCores() - 1 
 cl  = makeCluster(ncores)
 {
   clusterExport(cl, "stan")
@@ -158,3 +156,8 @@ stopCluster(cl)
 for (root in names(output)) {
   list_saver(output[[root]], file.path("Output", folder, root))
 }
+
+
+
+
+
